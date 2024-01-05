@@ -333,9 +333,9 @@ RUN make -C /usr/src/linux INSTALL_HDR_PATH=/usr/local headers_install
 
 # http://download.virtualbox.org/virtualbox/
 # updated via "update.sh"
-ENV VBOX_VERSION 5.2.36
+ENV VBOX_VERSION 6.1.48
 # https://www.virtualbox.org/download/hashes/$VBOX_VERSION/SHA256SUMS
-ENV VBOX_SHA256 6124287b7a1790436a9b0b2601154b50c6cd6e680aeff45c61d03ee1158f3eb9
+ENV VBOX_SHA256 b73e1394735f0476faf7d9fd1f1c890f3f3118cc5784c1a952b05bc207de8166
 # (VBoxGuestAdditions_X.Y.Z.iso SHA256, for verification)
 
 RUN wget -O /vbox.iso "https://download.virtualbox.org/virtualbox/$VBOX_VERSION/VBoxGuestAdditions_$VBOX_VERSION.iso"; \
@@ -412,10 +412,10 @@ RUN wget -O usr/local/sbin/cgroupfs-mount "https://github.com/tianon/cgroupfs-mo
 	chmod +x usr/local/sbin/cgroupfs-mount; \
 	tcl-chroot cgroupfs-mount
 
-ENV DOCKER_VERSION 19.03.6
+ENV DOCKER_VERSION 24.0.7
 
 # Get the Docker binaries with version that matches our boot2docker version.
-RUN DOCKER_CHANNEL='edge'; \
+RUN DOCKER_CHANNEL='stable'; \
 	case "$DOCKER_VERSION" in \
 # all the pre-releases go in the "test" channel
 		*-rc* | *-beta* | *-tp* ) DOCKER_CHANNEL='test' ;; \
