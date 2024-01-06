@@ -37,12 +37,12 @@ WORKDIR /rootfs
 
 # updated via "update.sh"
 ENV TCL_MIRRORS http://distro.ibiblio.org/tinycorelinux http://repo.tinycorelinux.net
-ENV TCL_MAJOR 11.x
-ENV TCL_VERSION 11.0
+ENV TCL_MAJOR 13.x
+ENV TCL_VERSION 13.1
 
-# http://distro.ibiblio.org/tinycorelinux/8.x/x86_64/archive/8.2.1/distribution_files/rootfs64.gz.md5.txt
+# http://distro.ibiblio.org/tinycorelinux/13.x/x86_64/archive/13.1/distribution_files/rootfs64.gz.md5.txt
 # updated via "update.sh"
-ENV TCL_ROOTFS="rootfs64.gz" TCL_ROOTFS_MD5="ea8699a39115289ed00d807eac4c3118"
+ENV TCL_ROOTFS="rootfs64.gz" TCL_ROOTFS_MD5="337441ac3eb75561a9d702d783e678ba"
 
 COPY files/tce-load.patch files/udhcpc.patch /tcl-patches/
 
@@ -121,7 +121,7 @@ RUN mkdir -p proc; \
 
 # as of squashfs-tools 4.4, TCL's unsquashfs is broken... (fails to unsquashfs *many* core tcz files)
 # https://github.com/plougher/squashfs-tools/releases
-ENV SQUASHFS_VERSION 4.4
+ENV SQUASHFS_VERSION 4.6.1
 RUN wget -O squashfs.tgz "https://github.com/plougher/squashfs-tools/archive/$SQUASHFS_VERSION.tar.gz"; \
 	tar --directory=/usr/src --extract --file=squashfs.tgz; \
 	make -C "/usr/src/squashfs-tools-$SQUASHFS_VERSION/squashfs-tools" \
