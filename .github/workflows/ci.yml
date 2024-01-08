@@ -53,3 +53,10 @@ jobs:
         with:
           name: boot2docker
           path: boot2docker.iso
+
+      - name: Publish Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: boot2docker.iso
+          token: ${{ secrets.GITHUB_TOKEN }}
+#          allowUpdates: true
