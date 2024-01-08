@@ -45,10 +45,10 @@ jobs:
       - name: '"ls"'
         run: ls -lh boot2docker.iso
 
-      - name: '"pwd" and echo GH workspace'
-        run: pwd; echo ${{ GITHUB_WORKSPACE }}
+      - name: 'Print Working Dir'
+        run: pwd
 
-      - name: '"docker images"'
+      - name: 'Output of "docker images"'
         run: docker images
 
       - name: Upload Artifact
@@ -60,6 +60,6 @@ jobs:
       - name: Publish Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: ${{ GITHUB_WORKSPACE }}/boot2docker.iso
+          artifacts: /home/runner/work/boot2docker/boot2docker/boot2docker.iso
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
