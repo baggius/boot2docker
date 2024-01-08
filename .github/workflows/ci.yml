@@ -5,8 +5,7 @@ on:
   pull_request:
 
   push:
-    branches: 
-      - '*'
+    tags: '*'
 
   schedule:
     - cron: 0 0 * * 0
