@@ -1,4 +1,4 @@
-name: GitHub CI
+name: GitHub Release
 
 on:
 
@@ -7,12 +7,13 @@ on:
   push:
     branches: 
       - '*'
+
   schedule:
     - cron: 0 0 * * 0
 
 jobs:
 
-  build-test:
+  build:
 
     runs-on: ubuntu-latest
 
@@ -48,13 +49,8 @@ jobs:
       - name: '"docker images"'
         run: docker images
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
         with:
           name: boot2docker
           path: boot2docker.iso
-
-      - uses: ncipollo/release-action@v1
-        with:
-          artifacts: boot2docker.iso
-          token: ${{ secrets.GITHUB_TOKEN }}
-          allowUpdates: true
