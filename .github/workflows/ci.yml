@@ -45,6 +45,9 @@ jobs:
       - name: '"ls"'
         run: ls -lh boot2docker.iso
 
+      - name: '"pwd" and echo GH workspace'
+        run: pwd; echo ${{ GITHUB_WORKSPACE }}
+
       - name: '"docker images"'
         run: docker images
 
@@ -57,6 +60,6 @@ jobs:
       - name: Publish Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: boot2docker.iso
+          artifacts: ${{ GITHUB_WORKSPACE }}/boot2docker.iso
           token: ${{ secrets.GITHUB_TOKEN }}
-#          allowUpdates: true
+          allowUpdates: true
