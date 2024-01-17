@@ -195,7 +195,6 @@ RUN tcl-tce-load \
 		tar \
 		util-linux \
 		xz \
-		linux-5.15_api_headers \
 		iptables 
 
 # bash-completion puts auto-load in /usr/local/etc/profile.d instead of /etc/profile.d
