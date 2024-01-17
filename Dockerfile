@@ -175,6 +175,33 @@ RUN tcl-tce-load bash; \
 	source etc/profile.d/boot2docker-ps1.sh; \
 	[ "$PS1" = '\[\e[1;32m\]\u@\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[0m\]\$ ' ]
 
+RUN tcl-tce-load \
+		acpid \
+		bash-completion \
+		ca-certificates \
+		curl \
+		e2fsprogs \
+		git \
+		iproute2 \
+		ncursesw-terminfo \
+		nfs-utils \
+		openssh \
+		parted \
+		procps-ng \
+		rsync \
+		tar \
+		util-linux \
+		xz \
+		iptables 
+
+# bash-completion puts auto-load in /usr/local/etc/profile.d instead of /etc/profile.d
+# (this one-liner is the same as the loop at the end of /etc/profile with an adjusted search path)
+RUN echo 'for i in /usr/local/etc/profile.d/*.sh ; do if [ -r "$i" ]; then . $i; fi; done' > etc/profile.d/usr-local-etc-profile-d.sh; \
+# Docker expects to find certs in /etc/ssl
+	ln -svT ../usr/local/etc/ssl etc/ssl; \
+# make sure the Docker group exists and we're part of it
+	tcl-chroot sh -eux -c 'addgroup -S docker && addgroup docker docker'
+
 # https://www.kernel.org/category/signatures.html#important-fingerprints
 ENV LINUX_GPG_KEYS \
 # Linus Torvalds
@@ -305,34 +332,6 @@ RUN make -C /usr/src/linux -j "$(nproc)" bzImage modules; \
 	make -C /usr/src/linux INSTALL_MOD_PATH="$PWD" modules_install
 RUN mkdir -p /tmp/iso/boot; \
 	cp -vLT /usr/src/linux/arch/x86_64/boot/bzImage /tmp/iso/boot/vmlinuz
-
-RUN tcl-tce-load \
-		acpid \
-		bash-completion \
-		ca-certificates \
-		curl \
-		e2fsprogs \
-		git \
-		iproute2 \
-		iptables \
-		ncursesw-terminfo \
-		nfs-utils \
-		openssh \
-		openssl-1.1.1 \
-		parted \
-		procps-ng \
-		rsync \
-		tar \
-		util-linux \
-		xz
-
-# bash-completion puts auto-load in /usr/local/etc/profile.d instead of /etc/profile.d
-# (this one-liner is the same as the loop at the end of /etc/profile with an adjusted search path)
-RUN echo 'for i in /usr/local/etc/profile.d/*.sh ; do if [ -r "$i" ]; then . $i; fi; done' > etc/profile.d/usr-local-etc-profile-d.sh; \
-# Docker expects to find certs in /etc/ssl
-	ln -svT ../usr/local/etc/ssl etc/ssl; \
-# make sure the Docker group exists and we're part of it
-	tcl-chroot sh -eux -c 'addgroup -S docker && addgroup docker docker'
 
 # install kernel headers so we can use them for building xen-utils, etc
 RUN make -C /usr/src/linux INSTALL_HDR_PATH=/usr/local headers_install
