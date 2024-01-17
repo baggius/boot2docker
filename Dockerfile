@@ -175,6 +175,9 @@ RUN tcl-tce-load bash; \
 	source etc/profile.d/boot2docker-ps1.sh; \
 	[ "$PS1" = '\[\e[1;32m\]\u@\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[0m\]\$ ' ]
 
+# clean tmp/tce/optional/*.dep files to avoid cache of different tinycore .dep versions 
+RUN ls tmp/tce/optional/*.dep; rm tmp/tce/optional/*.dep 
+
 RUN tcl-tce-load \
 		acpid \
 		bash-completion \
