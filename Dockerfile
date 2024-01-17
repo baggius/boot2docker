@@ -195,6 +195,7 @@ RUN tcl-tce-load \
 		tar \
 		util-linux \
 		xz \
+		linux-5.15_api_headers \
 		iptables 
 
 # bash-completion puts auto-load in /usr/local/etc/profile.d instead of /etc/profile.d
@@ -213,131 +214,10 @@ ENV LINUX_GPG_KEYS \
 		647F28654894E3BD457199BE38DBBDC86092693E
 
 # updated via "update.sh"
-# 4.14.134 4.19.103 5.15.10
-ENV LINUX_VERSION 4.14.336
+# 4.14.134 4.19.103 4.14.336 5.15.10
+ENV LINUX_VERSION 5.15.10
 
-RUN wget -O /linux.tar.xz "https://cdn.kernel.org/pub/linux/kernel/v${LINUX_VERSION%%.*}.x/linux-${LINUX_VERSION}.tar.xz"; \
-	wget -O /linux.tar.asc "https://cdn.kernel.org/pub/linux/kernel/v${LINUX_VERSION%%.*}.x/linux-${LINUX_VERSION}.tar.sign"; \
-	\
-# decompress (signature is for the decompressed file)
-	xz --decompress /linux.tar.xz; \
-	[ -f /linux.tar ] && [ ! -f /linux.tar.xz ]; \
-	\
-# verify
-	export GNUPGHOME="$(mktemp -d)"; \
-	for key in $LINUX_GPG_KEYS; do \
-		for mirror in \
-			ha.pool.sks-keyservers.net \
-			pgp.mit.edu \
-			hkp://p80.pool.sks-keyservers.net:80 \
-			ipv4.pool.sks-keyservers.net \
-			keyserver.ubuntu.com \
-			hkp://keyserver.ubuntu.com:80 \
-		; do \
-			if gpg --batch --verbose --keyserver "$mirror" --keyserver-options timeout=5 --recv-keys "$key"; then \
-				break; \
-			fi; \
-		done; \
-		gpg --batch --fingerprint "$key"; \
-	done; \
-	gpg --batch --verify /linux.tar.asc /linux.tar; \
-	gpgconf --kill all; \
-	rm -rf "$GNUPGHOME"; \
-	\
-# extract
-	tar --extract --file /linux.tar --directory /usr/src; \
-	rm /linux.tar /linux.tar.asc; \
-	ln -sT "linux-$LINUX_VERSION" /usr/src/linux; \
-	[ -d /usr/src/linux ]
-
-RUN { \
-		echo '#!/usr/bin/env bash'; \
-		echo 'set -Eeuo pipefail'; \
-		echo 'while [ "$#" -gt 0 ]; do'; \
-		echo 'conf="${1%%=*}"; shift'; \
-		echo 'conf="${conf#CONFIG_}"'; \
-# https://www.kernel.org/doc/Documentation/kbuild/kconfig-language.txt
-# TODO somehow capture "if" directives (https://github.com/torvalds/linux/blob/52e60b754438f34d23348698534e9ca63cd751d7/drivers/message/fusion/Kconfig#L12) since they're dependency related (can't set "CONFIG_FUSION_SAS" without first setting "CONFIG_FUSION")
-		echo 'find /usr/src/linux/ \
-			-name Kconfig \
-			-exec awk -v conf="$conf" '"'"' \
-				$1 ~ /^(menu)?config$/ && $2 == conf { \
-					yes = 1; \
-					printf "-- %s:%s --\n", FILENAME, FNR; \
-					print; \
-					next; \
-				} \
-				$1 ~ /^(end)?((menu)?config|choice|comment|menu|if|source)$/ { yes = 0; next } \
-# TODO parse help text properly (indentation-based) to avoid false positives when scraping deps
-				yes { print; next } \
-			'"'"' "{}" + \
-		'; \
-		echo 'done'; \
-	} > /usr/local/bin/linux-kconfig-info; \
-	chmod +x /usr/local/bin/linux-kconfig-info; \
-	linux-kconfig-info CGROUPS
-
-COPY files/kernel-config.d /kernel-config.d
-
-RUN setConfs="$(grep -vEh '^[#-]' /kernel-config.d/* | sort -u)"; \
-	unsetConfs="$(sed -n 's/^-//p' /kernel-config.d/* | sort -u)"; \
-	IFS=$'\n'; \
-	setConfs=( $setConfs ); \
-	unsetConfs=( $unsetConfs ); \
-	unset IFS; \
-	\
-	make -C /usr/src/linux \
-		defconfig \
-		kvmconfig \
-		xenconfig \
-		> /dev/null; \
-	\
-	( \
-		set +x; \
-		for conf in "${unsetConfs[@]}"; do \
-			sed -i -e "s!^$conf=.*\$!# $conf is not set!" /usr/src/linux/.config; \
-		done; \
-		for confV in "${setConfs[@]}"; do \
-			conf="${confV%%=*}"; \
-			sed -ri -e "s!^($conf=.*|# $conf is not set)\$!$confV!" /usr/src/linux/.config; \
-			if ! grep -q "^$confV\$" /usr/src/linux/.config; then \
-				echo "$confV" >> /usr/src/linux/.config; \
-			fi; \
-		done; \
-	); \
-	make -C /usr/src/linux olddefconfig; \
-	set +x; \
-	ret=; \
-	for conf in "${unsetConfs[@]}"; do \
-		if grep "^$conf=" /usr/src/linux/.config; then \
-			echo "$conf is set!"; \
-			ret=1; \
-		fi; \
-	done; \
-	for confV in "${setConfs[@]}"; do \
-		if ! grep -q "^$confV\$" /usr/src/linux/.config; then \
-			kconfig="$(linux-kconfig-info "$confV")"; \
-			echo >&2; \
-			echo >&2 "'$confV' is not set:"; \
-			echo >&2; \
-			echo >&2 "$kconfig"; \
-			echo >&2; \
-			for dep in $(awk '$1 == "depends" && $2 == "on" { $1 = ""; $2 = ""; gsub(/[^a-zA-Z0-9_-]+/, " "); print }' <<<"$kconfig"); do \
-				grep >&2 -E "^CONFIG_$dep=|^# CONFIG_$dep is not set$" /usr/src/linux/.config || :; \
-			done; \
-			echo >&2; \
-			ret=1; \
-		fi; \
-	done; \
-	[ -z "$ret" ] || exit "$ret"
-
-RUN make -C /usr/src/linux -j "$(nproc)" bzImage modules; \
-	make -C /usr/src/linux INSTALL_MOD_PATH="$PWD" modules_install
-RUN mkdir -p /tmp/iso/boot; \
-	cp -vLT /usr/src/linux/arch/x86_64/boot/bzImage /tmp/iso/boot/vmlinuz
-
-# install kernel headers so we can use them for building xen-utils, etc
-RUN make -C /usr/src/linux INSTALL_HDR_PATH=/usr/local headers_install
+RUN tcl-tce-load `provides.sh api_headers` 
 
 # http://download.virtualbox.org/virtualbox/
 # updated via "update.sh"
