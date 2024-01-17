@@ -37,17 +37,17 @@ WORKDIR /rootfs
 
 # updated via "update.sh"
 ENV TCL_MIRRORS http://distro.ibiblio.org/tinycorelinux http://repo.tinycorelinux.net
-ENV TCL_MAJOR 11.x
-ENV TCL_VERSION 11.0
+ENV TCL_MAJOR 13.x
+ENV TCL_VERSION 13.1
 
 # http://distro.ibiblio.org/tinycorelinux/13.x/x86_64/archive/13.1/distribution_files/rootfs64.gz.md5.txt
 # updated via "update.sh"
 # 10.1 rootfs64
 # ENV TCL_ROOTFS="rootfs64.gz" TCL_ROOTFS_MD5="ec65d3b2bbb64f62a171f60439c84127"
 # 11.0 rootfs64
-ENV TCL_ROOTFS="rootfs64.gz" TCL_ROOTFS_MD5="ea8699a39115289ed00d807eac4c3118"
+# ENV TCL_ROOTFS="rootfs64.gz" TCL_ROOTFS_MD5="ea8699a39115289ed00d807eac4c3118"
 # 13.1 rootfs64
-# ENV TCL_ROOTFS="rootfs64.gz" TCL_ROOTFS_MD5="337441ac3eb75561a9d702d783e678ba"
+ENV TCL_ROOTFS="rootfs64.gz" TCL_ROOTFS_MD5="337441ac3eb75561a9d702d783e678ba"
 
 COPY files/tce-load.patch files/udhcpc.patch /tcl-patches/
 
@@ -194,7 +194,8 @@ RUN tcl-tce-load \
 		rsync \
 		tar \
 		util-linux \
-		xz \
+		xz \  
+		ipv6-netfilter-5.15.10-tinycore64 \  
 		iptables 
 
 # bash-completion puts auto-load in /usr/local/etc/profile.d instead of /etc/profile.d
@@ -216,7 +217,7 @@ ENV LINUX_GPG_KEYS \
 # 4.14.134 4.19.103 4.14.336 5.15.10
 ENV LINUX_VERSION 5.15.10
 
-RUN tcl-tce-load `provides.sh api_headers` 
+RUN tcl-tce-load linux-5.15_api_headers
 
 # http://download.virtualbox.org/virtualbox/
 # updated via "update.sh"
