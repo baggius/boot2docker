@@ -216,8 +216,18 @@ ENV LINUX_GPG_KEYS \
 # updated via "update.sh"
 # 4.14.134 4.19.103 4.14.336 5.15.10
 ENV LINUX_VERSION 5.15.10
-ENV KERN_VER 5.15.10
-RUN tcl-tce-load linux-5.15_api_headers
+#ENV KERN_VER 5.15.10
+#RUN tcl-tce-load linux-5.15_api_headers
+# download kernel and config
+RUN wget -O /linux-5.15.10-patched.txz http://tinycorelinux.net/13.x/x86_64/release/src/kernel/linux-5.15.10-patched.txz; \
+	wget -O /config-5.15.10-tinycore64 http://tinycorelinux.net/13.x/x86_64/release/src/kernel/config-5.15.10-tinycore64
+# unpack kernel and use config
+RUN tar -Jxf /linux-5.15.10-patched.txz -C /usr/src; \
+  	ln -s /usr/src/linux-5.15.10 /usr/src/linux; \
+   	cp /config-5.15.10-tinycore64 /usr/src/linux/.config
+
+# build kernel and modules
+RUN make -C /usr/src/linux -j "$(nproc)" bzImage modules
 
 # http://download.virtualbox.org/virtualbox/
 # updated via "update.sh"
