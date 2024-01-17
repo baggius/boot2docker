@@ -216,7 +216,7 @@ ENV LINUX_GPG_KEYS \
 # updated via "update.sh"
 # 4.14.134 4.19.103 4.14.336 5.15.10
 ENV LINUX_VERSION 5.15.10
-
+ENV KERN_VER 5.15.10
 RUN tcl-tce-load linux-5.15_api_headers
 
 # http://download.virtualbox.org/virtualbox/
