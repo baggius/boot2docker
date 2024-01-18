@@ -223,6 +223,9 @@ RUN tar -Jxf /linux-${LINUX_VERSION}-patched.txz -C /usr/src; \
   	ln -s /usr/src/linux-${LINUX_VERSION} /usr/src/linux; \
    	cp /config-${LINUX_VERSION}-tinycore64 /usr/src/linux/.config
 
+# enable OVERLAY_FS as module
+RUN sed -i 's/\# CONFIG_OVERLAY_FS is not set/CONFIG_OVERLAY_FS=m/g' /usr/src/linux/.config
+
 RUN rm -v /linux-${LINUX_VERSION}-patched.txz /config-${LINUX_VERSION}-tinycore64
 # build kernel and modules
 RUN { \
@@ -295,7 +298,7 @@ RUN tcl-tce-load open-vm-tools; \
 # rollback uname -r kernel version in tinycore fetch script
 RUN sed -i 's/""'$LINUX_VERSION'-tinycore64"/\$(uname -r)/g' usr/bin/tce-load 
 
-ENV PARALLELS_VERSION 13.3.0-43321
+ENV PARALLELS_VERSION 18.3.2-53621
 
 RUN wget -O /parallels.tgz "https://download.parallels.com/desktop/v${PARALLELS_VERSION%%.*}/$PARALLELS_VERSION/ParallelsTools-$PARALLELS_VERSION-boot2docker.tar.gz"; \
 	mkdir /usr/src/parallels; \
@@ -313,7 +316,7 @@ RUN cp -vr /usr/src/parallels/tools/* ./; \
 
 # https://github.com/xenserver/xe-guest-utilities/tags
 # updated via "update.sh"
-ENV XEN_VERSION 7.18.0
+ENV XEN_VERSION 8.3.1
 
 RUN wget -O /xen.tgz "https://github.com/xenserver/xe-guest-utilities/archive/v$XEN_VERSION.tar.gz"; \
 	mkdir /usr/src/xen; \
