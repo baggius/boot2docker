@@ -194,9 +194,10 @@ RUN tcl-tce-load \
 		rsync \
 		tar \
 		util-linux \
-		xz \  
-		ipv6-netfilter-5.15.10-tinycore64 \  
-		iptables 
+		xz 
+  
+# forcing to download including filter dependency of iptables
+RUN rm tmp/tce/optional/iptables*.dep; tcl-tce-load iptables 
 
 # bash-completion puts auto-load in /usr/local/etc/profile.d instead of /etc/profile.d
 # (this one-liner is the same as the loop at the end of /etc/profile with an adjusted search path)
@@ -214,20 +215,51 @@ ENV LINUX_GPG_KEYS \
 		647F28654894E3BD457199BE38DBBDC86092693E
 
 # updated via "update.sh"
-# 4.14.134 4.19.103 4.14.336 5.15.10
 ENV LINUX_VERSION 5.15.10
-#ENV KERN_VER 5.15.10
-#RUN tcl-tce-load linux-5.15_api_headers
-# download kernel and config
-RUN wget -O /linux-5.15.10-patched.txz http://tinycorelinux.net/13.x/x86_64/release/src/kernel/linux-5.15.10-patched.txz; \
-	wget -O /config-5.15.10-tinycore64 http://tinycorelinux.net/13.x/x86_64/release/src/kernel/config-5.15.10-tinycore64
-# unpack kernel and use config
-RUN tar -Jxf /linux-5.15.10-patched.txz -C /usr/src; \
-  	ln -s /usr/src/linux-5.15.10 /usr/src/linux; \
-   	cp /config-5.15.10-tinycore64 /usr/src/linux/.config
+
+# download tinycore kernel and config
+RUN wget -O /linux-${LINUX_VERSION}-patched.txz http://tinycorelinux.net/${TCL_MAJOR}/x86_64/release/src/kernel/linux-${LINUX_VERSION}-patched.txz; \
+	wget -O /config-${LINUX_VERSION}-tinycore64 http://tinycorelinux.net/${TCL_MAJOR}/x86_64/release/src/kernel/config-${LINUX_VERSION}-tinycore64
+# unpack tinycore kernel and tinycore config
+RUN tar -Jxf /linux-${LINUX_VERSION}-patched.txz -C /usr/src; \
+  	ln -s /usr/src/linux-${LINUX_VERSION} /usr/src/linux; \
+   	cp /config-${LINUX_VERSION}-tinycore64 /usr/src/linux/.config
 
 # build kernel and modules
-RUN make -C /usr/src/linux -j "$(nproc)" bzImage modules
+RUN { \
+		echo '#!/usr/bin/env bash'; \
+		echo 'set -Eeuo pipefail'; \
+		echo 'while [ "$#" -gt 0 ]; do'; \
+		echo 'conf="${1%%=*}"; shift'; \
+		echo 'conf="${conf#CONFIG_}"'; \
+# https://www.kernel.org/doc/Documentation/kbuild/kconfig-language.txt
+# TODO somehow capture "if" directives (https://github.com/torvalds/linux/blob/52e60b754438f34d23348698534e9ca63cd751d7/drivers/message/fusion/Kconfig#L12) since they're dependency related (can't set "CONFIG_FUSION_SAS" without first setting "CONFIG_FUSION")
+		echo 'find /usr/src/linux/ \
+			-name Kconfig \
+			-exec awk -v conf="$conf" '"'"' \
+				$1 ~ /^(menu)?config$/ && $2 == conf { \
+					yes = 1; \
+					printf "-- %s:%s --\n", FILENAME, FNR; \
+					print; \
+					next; \
+				} \
+				$1 ~ /^(end)?((menu)?config|choice|comment|menu|if|source)$/ { yes = 0; next } \
+# TODO parse help text properly (indentation-based) to avoid false positives when scraping deps
+				yes { print; next } \
+			'"'"' "{}" + \
+		'; \
+		echo 'done'; \
+	} > /usr/local/bin/linux-kconfig-info; \
+	chmod +x /usr/local/bin/linux-kconfig-info; \
+	linux-kconfig-info CGROUPS
+
+RUN make -C /usr/src/linux -j "$(nproc)" bzImage modules; \
+	make -C /usr/src/linux INSTALL_MOD_PATH="$PWD" modules_install
+RUN mkdir -p /tmp/iso/boot; \
+	cp -vLT /usr/src/linux/arch/x86_64/boot/bzImage /tmp/iso/boot/vmlinuz
+
+# install kernel headers so we can use them for building xen-utils, etc
+RUN make -C /usr/src/linux INSTALL_HDR_PATH=/usr/local headers_install
 
 # http://download.virtualbox.org/virtualbox/
 # updated via "update.sh"
