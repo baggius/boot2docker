@@ -305,7 +305,7 @@ RUN wget -O /parallels.tgz "https://download.parallels.com/desktop/v${PARALLELS_
 	tar --extract --file /parallels.tgz --directory /usr/src/parallels --strip-components 1; \
 	rm /parallels.tgz
 RUN cp -vr /usr/src/parallels/tools/* ./; \
-	make -C /usr/src/parallels/kmods -f Makefile.kmods -j "$(nproc)" installme \
+	make -C /usr/src/parallels/kmods -f Makefile.kmods -j "$(nproc)" compile \
 		SRC='/usr/src/linux' \
 		KERNEL_DIR='/usr/src/linux' \
 		KVER="$(< /usr/src/linux/include/config/kernel.release)" \
