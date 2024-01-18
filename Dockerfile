@@ -161,7 +161,7 @@ RUN { \
 	chmod +x /usr/local/bin/tcl-tce-load
 
 # use of a static string of actual kernel version in tinycore fetch script
-RUN sed -i 's/uname -r/echo -n ${LINUX_VERSION}-tinycore64/g' usr/bin/tce-load
+RUN sed -i 's/\${uname -r}/${LINUX_VERSION}-tinycore64/g' usr/bin/tce-load
 
 RUN tcl-tce-load bash; \
 	tcl-chroot bash --version; \
@@ -292,7 +292,7 @@ RUN tcl-tce-load open-vm-tools; \
 	tcl-chroot grep version\= /usr/local/bin/vmware-checkvm 
 
 # rollback uname -r kernel version in tinycore fetch script
-RUN sed -i 's/echo -n ${LINUX_VERSION}-tinycore64/uname -r/g' usr/bin/tce-load 
+RUN sed -i 's/${LINUX_VERSION}-tinycore64/\${uname -r}/g' usr/bin/tce-load 
 
 ENV PARALLELS_VERSION 13.3.0-43321
 
