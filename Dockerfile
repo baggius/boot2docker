@@ -156,7 +156,9 @@ ENV LINUX_GPG_KEYS \
 ENV LINUX_VERSION 5.15.10
 RUN { \
 		echo '#!/bin/bash -Eeux'; \
-		echo 'tcl-chroot su -c "sed -i \"s/uname -r/echo -n ${LINUX_VERSION}-tinycore64/g\" usr/bin/tce-fetch.sh && tce-load -wicl \"\$@\" && sed -i \"s/echo -n ${LINUX_VERSION}-tinycore64/uname -r/g\" usr/bin/tce-fetch.sh " docker -- - "$@"'; \
+  		echo 'sudo sed -i \"s/uname -r/echo -n ${LINUX_VERSION}-tinycore64/g\" usr/bin/tce-fetch.sh'; \
+		echo 'tcl-chroot su -c "tce-load -wicl \"\$@\"" docker -- - "$@"'; \
+  		echo 'sudo sed -i \"s/echo -n ${LINUX_VERSION}-tinycore64/uname -r/g\" usr/bin/tce-fetch.sh'; \ 
 	} > /usr/local/bin/tcl-tce-load; \
 	chmod +x /usr/local/bin/tcl-tce-load
 
