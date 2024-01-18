@@ -156,11 +156,12 @@ ENV LINUX_GPG_KEYS \
 ENV LINUX_VERSION 5.15.10
 RUN { \
 		echo '#!/bin/bash -Eeux'; \
-  		echo 'sudo sed -i \"s/uname -r/echo -n ${LINUX_VERSION}-tinycore64/g\" usr/bin/tce-fetch.sh'; \
 		echo 'tcl-chroot su -c "tce-load -wicl \"\$@\"" docker -- - "$@"'; \
-  		echo 'sudo sed -i \"s/echo -n ${LINUX_VERSION}-tinycore64/uname -r/g\" usr/bin/tce-fetch.sh'; \ 
 	} > /usr/local/bin/tcl-tce-load; \
 	chmod +x /usr/local/bin/tcl-tce-load
+
+# use of a static string of actual kernel version in tinycore fetch script
+RUN sed -i 's/uname -r/echo -n ${LINUX_VERSION}-tinycore64/g' usr/bin/tce-fetch.sh
 
 RUN tcl-tce-load bash; \
 	tcl-chroot bash --version; \
@@ -289,6 +290,9 @@ RUN make -C /usr/src/vbox/amd64/src/vboxguest -j "$(nproc)" \
 RUN tcl-tce-load open-vm-tools; \
 	tcl-chroot vmhgfs-fuse --version; \
 	tcl-chroot grep version\= /usr/local/bin/vmware-checkvm 
+
+# rollback uname -r kernel version in tinycore fetch script
+RUN sed -i 's/echo -n ${LINUX_VERSION}-tinycore64/uname -r/g' usr/bin/tce-fetch.sh 
 
 ENV PARALLELS_VERSION 13.3.0-43321
 
