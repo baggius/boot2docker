@@ -224,7 +224,7 @@ RUN tar -Jxf /linux-${LINUX_VERSION}-patched.txz -C /usr/src; \
    	cp /config-${LINUX_VERSION}-tinycore64 /usr/src/linux/.config
 
 # enable OVERLAY_FS as module
-RUN sed -i 's/\# CONFIG_OVERLAY_FS is not set/CONFIG_OVERLAY_FS=m\nOVERLAY_FS_REDIRECT_DIR=n\nOVERLAY_FS_REDIRECT_ALWAYS_FOLLOW=y\nOVERLAY_FS_INDEX=n\nOVERLAY_FS_XINO_AUTO=n\nOVERLAY_FS_METACOPY=n/g' /usr/src/linux/.config; grep OVERLAY_FS /usr/src/linux/.config
+RUN sed -i 's/\# CONFIG_OVERLAY_FS is not set/CONFIG_OVERLAY_FS=m\nCONFIG_OVERLAY_FS_REDIRECT_DIR=n\nCONFIG_OVERLAY_FS_REDIRECT_ALWAYS_FOLLOW=y\nCONFIG_OVERLAY_FS_INDEX=n\nCONFIG_OVERLAY_FS_XINO_AUTO=n\nCONFIG_OVERLAY_FS_METACOPY=n/g' /usr/src/linux/.config; grep OVERLAY_FS /usr/src/linux/.config
 
 RUN rm -v /linux-${LINUX_VERSION}-patched.txz /config-${LINUX_VERSION}-tinycore64
 # build kernel and modules
