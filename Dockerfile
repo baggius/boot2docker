@@ -197,7 +197,7 @@ RUN tcl-tce-load \
 		xz 
   
 # forcing to download including filter dependency of iptables
-RUN rm tmp/tce/optional/iptables*.dep; tcl-tce-load iptables 
+RUN ls tmp/tce/optional/*.dep; rm tmp/tce/optional/*.dep; tcl-tce-load iptables 
 
 # bash-completion puts auto-load in /usr/local/etc/profile.d instead of /etc/profile.d
 # (this one-liner is the same as the loop at the end of /etc/profile with an adjusted search path)
