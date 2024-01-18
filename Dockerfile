@@ -155,7 +155,7 @@ ENV LINUX_GPG_KEYS \
 ENV LINUX_VERSION 5.15.10
 RUN { \
 		echo '#!/bin/bash -Eeux'; \
-		echo 'tcl-chroot su -c "KERNEL=${LINUX_VERSION}-tinycore64 tce-load -wicl \"\$@\"" docker -- - "$@"'; \
+		echo 'tcl-chroot su -c "tce-load -wicl \"\$@\"" docker -- - "$@"'; \
 	} > /usr/local/bin/tcl-tce-load; \
 	chmod +x /usr/local/bin/tcl-tce-load
 
@@ -202,6 +202,9 @@ RUN tcl-tce-load \
 		util-linux \
 		xz \
   		iptables
+
+# re-tce-load iptables as failed from prev run, replacing KERNEL env variable with tinycore kernel release into iptables dep file
+RUN sed -i 's/KERNEL/${LINUX_VERSION}-tinycore64/g' tmp/tce/optional/iptables.tcz.dep; tcl-tce-load iptables
 
 # bash-completion puts auto-load in /usr/local/etc/profile.d instead of /etc/profile.d
 # (this one-liner is the same as the loop at the end of /etc/profile with an adjusted search path)
