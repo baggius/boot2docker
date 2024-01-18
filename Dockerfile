@@ -144,9 +144,18 @@ RUN wget -O squashfs.tgz "https://github.com/plougher/squashfs-tools/archive/$SQ
 	; \
 	tcl-chroot unsquashfs -v || :
 
+# https://www.kernel.org/category/signatures.html#important-fingerprints
+ENV LINUX_GPG_KEYS \
+# Linus Torvalds
+		ABAF11C65A2970B130ABE3C479BE3E4300411886 \
+# Greg Kroah-Hartman
+		647F28654894E3BD457199BE38DBBDC86092693E
+
+# updated via "update.sh"
+ENV LINUX_VERSION 5.15.10
 RUN { \
 		echo '#!/bin/bash -Eeux'; \
-		echo 'tcl-chroot su -c "tce-load -wicl \"\$@\"" docker -- - "$@"'; \
+		echo 'tcl-chroot su -c "KERNEL=${LINUX_VERSION}-tinycore64 tce-load -wicl \"\$@\"" docker -- - "$@"'; \
 	} > /usr/local/bin/tcl-tce-load; \
 	chmod +x /usr/local/bin/tcl-tce-load
 
@@ -175,9 +184,6 @@ RUN tcl-tce-load bash; \
 	source etc/profile.d/boot2docker-ps1.sh; \
 	[ "$PS1" = '\[\e[1;32m\]\u@\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[0m\]\$ ' ]
 
-# clean tmp/tce/optional/*.dep files to avoid cache of different tinycore .dep versions 
-RUN ls tmp/tce/optional/*.dep; rm tmp/tce/optional/*.dep 
-
 RUN tcl-tce-load \
 		acpid \
 		bash-completion \
@@ -194,10 +200,8 @@ RUN tcl-tce-load \
 		rsync \
 		tar \
 		util-linux \
-		xz 
-  
-# forcing to download including filter dependency of iptables
-RUN ls tmp/tce/optional/*.dep; rm tmp/tce/optional/*.dep; tcl-tce-load iptables 
+		xz \
+  		iptables
 
 # bash-completion puts auto-load in /usr/local/etc/profile.d instead of /etc/profile.d
 # (this one-liner is the same as the loop at the end of /etc/profile with an adjusted search path)
@@ -206,16 +210,6 @@ RUN echo 'for i in /usr/local/etc/profile.d/*.sh ; do if [ -r "$i" ]; then . $i;
 	ln -svT ../usr/local/etc/ssl etc/ssl; \
 # make sure the Docker group exists and we're part of it
 	tcl-chroot sh -eux -c 'addgroup -S docker && addgroup docker docker'
-
-# https://www.kernel.org/category/signatures.html#important-fingerprints
-ENV LINUX_GPG_KEYS \
-# Linus Torvalds
-		ABAF11C65A2970B130ABE3C479BE3E4300411886 \
-# Greg Kroah-Hartman
-		647F28654894E3BD457199BE38DBBDC86092693E
-
-# updated via "update.sh"
-ENV LINUX_VERSION 5.15.10
 
 # download tinycore kernel and config
 RUN wget -O /linux-${LINUX_VERSION}-patched.txz http://tinycorelinux.net/${TCL_MAJOR}/x86_64/release/src/kernel/linux-${LINUX_VERSION}-patched.txz; \
