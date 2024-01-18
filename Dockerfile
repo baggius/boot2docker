@@ -156,7 +156,7 @@ ENV LINUX_GPG_KEYS \
 ENV LINUX_VERSION 5.15.10
 RUN { \
 		echo '#!/bin/bash -Eeux'; \
-		echo 'tcl-chroot su -c "export KERNEL=${LINUX_VERSION}-tinycore64 && tce-load -wicl \"\$@\"" docker -- - "$@"'; unset KERNEL; \
+		echo 'tcl-chroot su -c "export KERNEL=${LINUX_VERSION}-tinycore64 && tce-load -wicl \"\$@\" && unset KERNEL" docker -- - "$@"'; \
 	} > /usr/local/bin/tcl-tce-load; \
 	chmod +x /usr/local/bin/tcl-tce-load
 
