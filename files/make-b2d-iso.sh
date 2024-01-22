@@ -45,5 +45,5 @@ mkdir -p /tmp/stats
 
 	echo "- VirtualBox Guest Additions [v$VBOX_VERSION](https://download.virtualbox.org/virtualbox/$VBOX_VERSION/)"
 
-	echo "- XenServer Tools (\`xe-guest-utilities\`) [v$XEN_VERSION](https://github.com/xenserver/xe-guest-utilities/tree/v$XEN_VERSION)"
+#	echo "- XenServer Tools (\`xe-guest-utilities\`) [v$XEN_VERSION](https://github.com/xenserver/xe-guest-utilities/tree/v$XEN_VERSION)"
 } | tee /tmp/stats/state.md
