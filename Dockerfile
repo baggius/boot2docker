@@ -226,6 +226,9 @@ RUN tar -Jxf /linux-${LINUX_VERSION}-patched.txz -C /usr/src; \
 # enable OVERLAY_FS as module
 RUN sed -i 's/\# CONFIG_OVERLAY_FS is not set/CONFIG_OVERLAY_FS=m\nCONFIG_OVERLAY_FS_REDIRECT_DIR=n\nCONFIG_OVERLAY_FS_REDIRECT_ALWAYS_FOLLOW=y\nCONFIG_OVERLAY_FS_INDEX=n\nCONFIG_OVERLAY_FS_XINO_AUTO=n\nCONFIG_OVERLAY_FS_METACOPY=n/g' /usr/src/linux/.config; grep OVERLAY_FS /usr/src/linux/.config
 
+# enable initial root disk LZMA support
+RUN sed -i 's/\# CONFIG_RD_LZMA is not set/CONFIG_RD_LZMA=y\nCONFIG_DECOMPRESS_LZMA=y/g' /usr/src/linux/.config; grep _LZMA /usr/src/linux/.config
+
 RUN rm -v /linux-${LINUX_VERSION}-patched.txz /config-${LINUX_VERSION}-tinycore64
 # build kernel and modules
 RUN { \
